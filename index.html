@@ -515,16 +515,40 @@
     });
   });
 
-  // Formulário de lista de espera (front-end only por enquanto, sem envio real)
+  // Formulário de lista de espera
+  const WAITLIST_API_URL = 'https://horacheck-app.vercel.app/api/waitlist';
   const waitlistForm = document.getElementById('waitlistForm');
   const waitlistNote = document.getElementById('waitlistNote');
-  waitlistForm.addEventListener('submit', (e) => {
+  const waitlistNoteTextoOriginal = waitlistNote.textContent;
+  const waitlistBtn = waitlistForm.querySelector('button[type="submit"]');
+  waitlistForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = waitlistForm.nome.value.trim();
-    waitlistForm.style.display = 'none';
-    waitlistNote.textContent = `Obrigado, ${nome.split(' ')[0]}! Avisaremos assim que o HoraCheck estiver pronto pra você.`;
-    waitlistNote.style.color = 'rgba(255,255,255,0.85)';
-    waitlistNote.style.fontWeight = '600';
+    const email = waitlistForm.email.value.trim();
+    waitlistBtn.disabled = true;
+    const textoBtnOriginal = waitlistBtn.textContent;
+    waitlistBtn.textContent = 'Enviando...';
+    try {
+      const res = await fetch(WAITLIST_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email }),
+      });
+      if (!res.ok) throw new Error('falha no cadastro');
+      waitlistForm.style.display = 'none';
+      waitlistNote.textContent = `Obrigado, ${nome.split(' ')[0]}! Avisaremos assim que o HoraCheck estiver pronto pra você.`;
+      waitlistNote.style.color = 'rgba(255,255,255,0.85)';
+      waitlistNote.style.fontWeight = '600';
+    } catch {
+      waitlistBtn.disabled = false;
+      waitlistBtn.textContent = textoBtnOriginal;
+      waitlistNote.textContent = 'Não conseguimos salvar seu cadastro agora. Tente de novo em instantes.';
+      waitlistNote.style.color = '#ffb4b4';
+      setTimeout(() => {
+        waitlistNote.textContent = waitlistNoteTextoOriginal;
+        waitlistNote.style.color = '';
+      }, 5000);
+    }
   });
 
   const cards = document.querySelectorAll('.fcard');
