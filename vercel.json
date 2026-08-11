@@ -1,0 +1,10 @@
+{
+  "headers": [
+    {
+      "source": "/documentos/(.*)",
+      "headers": [
+        { "key": "Content-Disposition", "value": "inline" }
+      ]
+    }
+  ]
+}
