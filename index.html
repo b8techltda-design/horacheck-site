@@ -517,6 +517,18 @@
     });
   });
 
+  // Captura de indicação (?ref=CODIGO): grava no localStorage assim que a
+  // pessoa chega pelo link, pra sobreviver a navegação pelas âncoras da
+  // própria página (não recarrega) e a uma eventual segunda visita antes
+  // de se cadastrar. Um novo ?ref= na URL sempre sobrescreve o anterior.
+  try {
+    const refDaUrl = new URLSearchParams(location.search).get('ref');
+    if (refDaUrl) localStorage.setItem('hc_ref', refDaUrl.trim().toUpperCase());
+  } catch {
+    // localStorage indisponível (ex: contexto privado bloqueado) — indicação
+    // simplesmente não é capturada, resto do site funciona normalmente.
+  }
+
   // Formulário de lista de espera
   const WAITLIST_API_URL = 'https://horacheck-app.vercel.app/api/waitlist';
   const waitlistForm = document.getElementById('waitlistForm');
@@ -530,11 +542,13 @@
     waitlistBtn.disabled = true;
     const textoBtnOriginal = waitlistBtn.textContent;
     waitlistBtn.textContent = 'Enviando...';
+    let refIndicacao;
+    try { refIndicacao = localStorage.getItem('hc_ref') || undefined; } catch {}
     try {
       const res = await fetch(WAITLIST_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email }),
+        body: JSON.stringify({ nome, email, ref: refIndicacao }),
       });
       if (!res.ok) throw new Error('falha no cadastro');
       waitlistForm.style.display = 'none';
